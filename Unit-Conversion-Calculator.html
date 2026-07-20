@@ -28,7 +28,6 @@ h1{text-align:center;color:var(--pri);margin-bottom:8px;font-size:clamp(1.4rem,4
 
 .info-text{font-size:.78em;color:#888;margin:4px 0 12px 0;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:4px;line-height:1.5;}
 
-/* 移动端：按钮稍大方便戳 */
 @media(max-width:480px){
     .card{padding:16px 14px;}
     .row input{padding:12px;font-size:1.05em;text-align:left;}
@@ -50,6 +49,8 @@ h1{text-align:center;color:var(--pri);margin-bottom:8px;font-size:clamp(1.4rem,4
 
 <div class="card"><h2>圆孔单位面积流量 (直径d取毫米数值)</h2><p class="info-text">Q/A</p><div id="c_areaFlow"></div></div>
 <div class="card"><h2>圆孔单位面积 &amp; 压强流量 (直径d取毫米数值，压强取千帕数值)</h2><p class="info-text">(Q/A)/P_kPa</p><div id="c_apf"></div></div>
+<!-- 新增模块 -->
+<div class="card"><h2>圆孔单位压强流量 (压强取千帕数值)</h2><p class="info-text">Q / P_kPa</p><div id="c_pf"></div></div>
 
 </div>
 </div>
@@ -89,6 +90,14 @@ const flow = {
     }
 };
 
+// 新增：压强流量单位——系数复用流量板块（Q/P，多除的 kPa 无量纲，系数同行）
+const pfUnits = {
+    ml_s_kpa:  ['ml/s/Kpa',  1],
+    L_H_kpa:   ['L/H/Kpa',   3.6],
+    mm3_s_kpa: ['mm³/s/Kpa', 1000],
+    ml_min_kpa:['ml/min/Kpa', 60],
+};
+
 const areaUnits = {
     mm2: ['平方毫米 (mm²)', 1],
     cm2: ['平方厘米 (cm²)', 0.01],
@@ -112,14 +121,19 @@ const apfUnits = {
 
 // ========== 状态 ==========
 let S = {
-    pressure: 100000,
-    length: 1,
-    flow: 1,
+    pressure: 100000,   // Pa
+    length: 1,          // mm
+    flow: 1,            // ml/s
     area: Math.PI * 0.5 ** 2,
     areaFlow: 1 / (Math.PI * 0.5 ** 2),
+    pf: 0,              // 新增：Q / P_kPa  (ml/s/kPa)
     apf: 0,
 };
-(() => { const pk = S.pressure / 1000; S.apf = pk ? S.areaFlow / pk : 0; })();
+(() => {
+    const pk = S.pressure / 1000;
+    S.pf = pk ? S.flow / pk : 0;
+    S.apf = pk ? S.areaFlow / pk : 0;
+})();
 
 // ========== 渲染 ==========
 function renderCat(id, cfg) {
@@ -164,6 +178,12 @@ function conv(btn) {
         S.areaFlow = v / areaFlowUnits[key][1];
         S.flow = S.areaFlow * S.area;
     }
+    else if (cat === 'c_pf') {
+        // 新增：Q/P_kPa 板块可输入反推 S.flow
+        S.pf = v / pfUnits[key][1];
+        const pKpa = S.pressure / 1000;
+        S.flow = pKpa ? S.pf * pKpa : 0;
+    }
     else if (cat === 'c_apf') {
         S.apf = v / apfUnits[key][1];
         const pKpa = S.pressure / 1000;
@@ -179,15 +199,14 @@ function cascade() {
     S.area = Math.PI * (S.length / 2) ** 2;
     S.areaFlow = S.area ? S.flow / S.area : 0;
     const pKpa = S.pressure / 1000;
+    S.pf = pKpa ? S.flow / pKpa : 0;   // 新增
     S.apf = pKpa ? S.areaFlow / pKpa : 0;
 }
 
-// 格式化：toFixed(8) 后若小数部分全 0 则去掉
 function fmt(n) {
     if (n === 0) return '0';
     if (!isFinite(n)) return 'NaN';
     const s = n.toFixed(8);
-    // 若 ".00000000" 结尾则去掉
     return s.includes('.') ? s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') : s;
 }
 
@@ -204,6 +223,7 @@ function updateAll() {
     const maps = [
         ['c_area', areaUnits, S.area],
         ['c_areaFlow', areaFlowUnits, S.areaFlow],
+        ['c_pf', pfUnits, S.pf],       // 新增
         ['c_apf', apfUnits, S.apf],
     ];
     for (const [id, units, base] of maps) {
@@ -219,6 +239,7 @@ renderCat('c_length', length);
 renderCat('c_flow', flow);
 renderDerived('c_area', areaUnits);
 renderDerived('c_areaFlow', areaFlowUnits);
+renderDerived('c_pf', pfUnits);       // 新增
 renderDerived('c_apf', apfUnits);
 updateAll();
 </script>

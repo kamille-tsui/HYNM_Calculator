@@ -38,16 +38,18 @@ h1{text-align:center;color:var(--pri);margin-bottom:8px;font-size:clamp(1.4rem,4
 </head>
 <body>
 <div class="container">
-<h1>综合单位换算计算器</h1>
-<p class="subtitle">基准国际通用值 | 派生板块联动</p>
+<h1>宏宇新材单位换算计算器</h1>
+<p class="subtitle">基准国际通用值 | 需更改请提需求到信息部</p>
 <div class="grid">
 
 <div class="card"><h2>压强 (基准: Pa)</h2><div id="c_pressure"></div></div>
 <div class="card"><h2>长度/直径 (基准: mm)</h2><div id="c_length"></div></div>
-<div class="card"><h2>流量 (基准: ml/s)</h2><div id="c_flow"></div></div>
-<div class="card"><h2>圆面积 (D=长度板直径)</h2><p class="info-text">A=π·(d/2)²</p><div id="c_area"></div></div>
+
+<div class="card"><h2>圆面积 (直径d取毫米长度的数值)</h2><p class="info-text">A=π·(d/2)²</p><div id="c_area"></div></div>
+<div class="card"><h2>流量 (基准: ml/s)</h2><p class="info-text">Q</p><div id="c_flow"></div></div>
+
 <div class="card"><h2>圆孔单位面积流量</h2><p class="info-text">Q/A</p><div id="c_areaFlow"></div></div>
-<div class="card"><h2>单位面积 &amp; 压强流量</h2><p class="info-text">(Q/A)/P_kPa</p><div id="c_apf"></div></div>
+<div class="card"><h2>圆孔单位面积 &amp; 压强流量(直径d取毫米长度的数值，压强取千帕数值)</h2><p class="info-text">(Q/A)/P_kPa</p><div id="c_apf"></div></div>
 
 </div>
 </div>

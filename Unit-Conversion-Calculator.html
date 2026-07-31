@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>宏宇新材单位换算计算器</title>
+<style>
+:root {
+    --bg:#1a1a2e;--card:#16213e;--pri:#0fcece;--txt:#eaeaea;--bd:#0f3460;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--txt);margin:0;padding:15px;line-height:1.6;}
+.container{max-width:1200px;margin:0 auto;}
+h1{text-align:center;color:var(--pri);margin-bottom:8px;font-size:clamp(1.4rem,4vw,2rem);}
+.subtitle{text-align:center;color:#888;margin-bottom:24px;font-size:clamp(.8rem,2vw,.9em);}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:20px;}
+.card{background:var(--card);border-radius:14px;padding:20px 22px;border:1px solid var(--bd);box-shadow:0 4px 15px rgba(0,0,0,.25);}
+.card h2{margin-top:0;color:var(--pri);border-bottom:1px solid var(--bd);padding-bottom:8px;font-size:clamp(1rem,2.5vw,1.2em);}
+
+.row{margin-bottom:14px;}
+.row label{display:block;font-size:clamp(.82rem,2vw,.88em);color:#bbb;margin-bottom:6px;}
+.row .inp-bar{display:flex;gap:10px;align-items:center;}
+.row input{flex:1;padding:14px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--txt);font-size:clamp(1.1em,2.5vw,1.35em);letter-spacing:.3px;min-width:0;text-align:right;outline:none;transition:border-color .2s;}
+.row input:focus{border-color:var(--pri);}
+.row button{flex:0 0 68px;padding:14px 0;border:none;border-radius:8px;background:var(--pri);color:#fff;font-weight:700;font-size:clamp(.85em,2vw,.95em);cursor:pointer;transition:.15s;white-space:nowrap;}
+.row button:hover{background:#0dbaba;transform:scale(1.04);}
+
+.row .lw-bar{display:flex;gap:10px;align-items:center;}
+.row .lw-bar input{flex:1;padding:14px 16px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--txt);font-size:clamp(1.1em,2.5vw,1.35em);min-width:0;text-align:right;outline:none;}
+.row .lw-bar select{flex:0 0 72px;padding:14px 6px;border:1px solid var(--bd);border-radius:8px;background:var(--bg);color:var(--txt);font-size:clamp(.82em,2vw,.88em);outline:none;}
+.row .lw-bar span{flex:0 0 auto;color:#bbb;font-size:.88em;}
+.row .calc-btn{flex:0 0 68px;padding:14px 0;border:none;border-radius:8px;background:var(--pri);color:#fff;font-weight:700;font-size:clamp(.85em,2vw,.95em);cursor:pointer;transition:.15s;white-space:nowrap;}
+.row .calc-btn:hover{background:#0dbaba;transform:scale(1.04);}
+
+.info-text{font-size:.78em;color:#888;margin:4px 0 12px 0;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:4px;line-height:1.5;}
+
+/* ===== 分组标题 + 分割线 ===== */
+.section-title{
+    grid-column:1 / -1;
+    color:var(--pri);
+    font-size:clamp(1rem,2.5vw,1.15em);
+    font-weight:700;
+    letter-spacing:.5px;
+    margin:18px 4px 4px 4px;
+    padding-left:6px;
+    border-left:4px solid var(--pri);
+}
+.divider{
+    grid-column:1 / -1;
+    height:1px;
+    background:linear-gradient(to right, transparent, var(--bd) 20%, var(--bd) 80%, transparent);
+    margin:6px 0 10px 0;
+    border:none;
+}
+
+@media(max-width:480px){
+    .card{padding:16px 14px;}
+    .row input,.row .lw-bar input{padding:12px;font-size:1.05em;text-align:left;}
+    .row .lw-bar select{padding:12px 4px;flex:0 0 64px;}
+    .row button,.row .calc-btn{flex:0 0 60px;padding:12px 0;}
+}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>宏宇新材单位换算计算器</h1>
+<p class="subtitle">基准国际通用值 · 矩形流量 Qᵣ 与圆形流量 Q꜀ 各自独立锁死，派生卡只动面积 / 本卡 kPa</p>
+<div class="grid">
+
+<!-- ========== 第一组：基础量 ========== -->
+<div class="section-title">基础量</div>
+
+<!-- 压强 -->
+<div class="card"><h2>压强 (基准: Pa)</h2><div id="c_pressure"></div></div>
+
+<!-- ========== 分割线 ========== -->
+<hr class="divider">
+
+<!-- ========== 第二组：矩形 ========== -->
+<div class="section-title">矩形</div>
+
+<!-- 矩形流量（独立 Qᵣ） -->
+<div class="card"><h2>矩形流量 (基准: ml/s)</h2><p class="info-text">Qᵣ — 矩形类别基准值，只供矩形类别卡片使用</p><div id="c_rectFlow"></div></div>
+
+<!-- 矩形面积 -->
+<div class="card" id="card_rect">
+  <h2>矩形面积 (长 × 宽)</h2>
+  <p class="info-text">长/宽可自行选择单位，面积结果在 mm²/cm²/dm²/m² 互转；面积被手动转换后长、宽变为 unknown</p>
+  <div class="row">
+    <label>长</label>
+    <div class="lw-bar">
+      <input type="number" step="any" id="rect_len" placeholder="长">
+      <select id="rect_len_unit"><option value="mm">mm</option><option value="cm">cm</option><option value="dm">dm</option><option value="m">m</option></select>
+    </div>
+  </div>
+  <div class="row">
+    <label>宽</label>
+    <div class="lw-bar">
+      <input type="number" step="any" id="rect_wid" placeholder="宽">
+      <select id="rect_wid_unit"><option value="mm">mm</option><option value="cm">cm</option><option value="dm">dm</option><option value="m">m</option></select>
+    </div>
+  </div>
+  <div class="row">
+    <label></label>
+    <div class="lw-bar"><button class="calc-btn" onclick="rectCalc()">计算</button><span></span></div>
+  </div>
+  <div id="c_rectArea"></div>
+</div>
+
+<!-- 矩形派生 ①：单位面积流量（Aᵣ 锁死，转换改 Qᵣ） -->
+<div class="card"><h2>矩形单位面积流量 (A 取自矩形面积卡)</h2><p class="info-text">Qᵣ / Aᵣ — 转换时 Aᵣ 不变，改的是矩形流量 Qᵣ</p><div id="c_rectAreaFlow"></div></div>
+
+<!-- 矩形派生 ②：单位压强流量（kPa 锁死，转换改 Qᵣ） -->
+<div class="card"><h2>矩形单位压强流量 (压强由此卡内 kPa 输入框给定)</h2><p class="info-text">Qᵣ / P_kPa — 转换时 kPa 不变，改的是矩形流量 Qᵣ</p>
+  <div class="row"><label>压强 P (kPa)</label><div class="inp-bar"><input type="number" step="any" id="rect_pf_kpa_input" value="100"><button onclick="rectPfKpaRead()">确定</button></div></div>
+  <div id="c_rectPf"></div>
+</div>
+
+<!-- 矩形派生 ③：单位面积 & 压强流量（Aᵣ 锁死，转换改 Qᵣ） -->
+<div class="card"><h2>矩形单位面积 &amp; 压强流量 (A 取自矩形面积卡，压强由此卡内 kPa 输入框给定)</h2><p class="info-text">(Qᵣ / Aᵣ) / P_kPa — 转换时 Aᵣ 和 P_kPa 不变，改的是矩形流量 Qᵣ</p>
+  <div class="row"><label>压强 P (kPa)</label><div class="inp-bar"><input type="number" step="any" id="rect_apf_kpa_input" value="100"><button onclick="rectApfKpaRead()">确定</button></div></div>
+  <div id="c_rectApf"></div>
+</div>
+
+<!-- ========== 分割线 ========== -->
+<hr class="divider">
+
+<!-- ========== 第三组：圆形 ========== -->
+<div class="section-title">圆形</div>
+
+<!-- 圆形流量（独立 Q꜀） -->
+<div class="card"><h2>圆形流量 (基准: ml/s)</h2><p class="info-text">Q꜀ — 圆形类别基准值，只供圆形类别卡片使用</p><div id="c_circFlow"></div></div>
+
+<!-- 直径 -->
+<div class="card"><h2>直径 (基准: mm)</h2><p class="info-text">d — 圆形类别直径基准值，圆面积从此处取毫米数值</p><div id="c_diameter"></div></div>
+
+<!-- 圆面积 -->
+<div class="card"><h2>圆面积 (直径d取毫米数值)</h2><p class="info-text">A=π·(d/2)²</p><div id="c_area"></div></div>
+
+<!-- 圆形单位面积流量（A 锁死，转换改 Q꜀） -->
+<div class="card"><h2>圆形单位面积流量 (直径d取毫米数值)</h2><p class="info-text">Q꜀/A — 转换时 A 不变，改的是圆形流量 Q꜀</p><div id="c_areaFlow"></div></div>
+
+<!-- 圆形单位压强流量（kPa 锁死，转换改 Q꜀） -->
+<div class="card"><h2>圆形单位压强流量 (压强由此卡内 kPa 输入框给定)</h2><p class="info-text">Q꜀ / P_kPa — 转换时 kPa 不变，改的是圆形流量 Q꜀</p>
+  <div class="row"><label>压强 P (kPa)</label><div class="inp-bar"><input type="number" step="any" id="pf_kpa_input" value="100"><button onclick="pfKpaRead()">确定</button></div></div>
+  <div id="c_pf"></div>
+</div>
+
+<!-- 圆形单位面积 & 压强流量 -->
+<div class="card"><h2>圆形单位面积 &amp; 压强流量 (压强由此卡内 kPa 输入框给定，直径d取毫米数值)</h2><p class="info-text">(Q꜀/A)/P_kPa</p>
+  <div class="row"><label>压强 P (kPa)</label><div class="inp-bar"><input type="number" step="any" id="apf_kpa_input" value="100"><button onclick="apfKpaRead()">确定</button></div></div>
+  <div id="c_apf"></div>
+</div>
+
+</div><!-- .grid -->
+</div><!-- .container -->
+
+<script>
+/* ========== 系数 ========== */
+const pressure = {
+    units: {
+        Pa:      ['帕斯卡 (Pa)',        1],
+        Kpa:     ['千帕 (Kpa)',         1e-3],
+        Mpa:     ['兆帕 (Mpa)',         1e-6],
+        bar:     ['巴 (bar)',           1e-5],
+        mbar:    ['毫巴 (mbar)',        0.01],
+        water_m: ['水深压力 (m)',       1e-4],
+    }
+};
+const length = {
+    units: {
+        mm: ['毫米 (mm)',  1],
+        cm: ['厘米 (cm)',  0.1],
+        dm: ['分米 (dm)',  0.01],
+        m:  ['米 (m)',     0.001],
+    }
+};
+const flow = {
+    units: {
+        ml_s:  ['毫升/秒 (ml/s)',  1],
+        L_H:   ['升/小时 (L/H)',   3.6],
+        mm3_s: ['立方毫米/秒 (mm³/s)', 1000],
+        ml_min:['毫升/分 (ml/min)', 60],
+    }
+};
+
+// 派生卡单位系数（圆形 / 矩形共用）
+const pfUnits = {
+    ml_s_kpa:  ['ml/s/Kpa',  1],
+    L_H_kpa:   ['L/H/Kpa',   3.6],
+    mm3_s_kpa: ['mm³/s/Kpa', 1000],
+    ml_min_kpa:['ml/min/Kpa', 60],
+};
+const areaFlowUnits = {
+    ml_s_mm2:   ['ml/s/mm²',       1],
+    L_H_cm2:    ['L/H/cm²',        360],
+    mm3_s_mm2:  ['mm³/s/mm²',      1000],
+    ml_min_cm2: ['ml/min/cm²',     6000],
+};
+const apfUnits = {
+    ml_s_mm2_kpa:  ['ml/s/mm²/Kpa',    1],
+    L_H_cm2_kpa:   ['L/H/cm²/Kpa',     360],
+    mm3_s_mm2_kpa: ['mm³/s/mm²/Kpa',   1000],
+    ml_min_cm2_kpa:['ml/min/cm²/Kpa',  6000],
+};
+const areaUnits = {
+    mm2: ['平方毫米 (mm²)', 1],
+    cm2: ['平方厘米 (cm²)', 0.01],
+    dm2: ['平方分米 (dm²)', 1e-4],
+    m2:  ['平方米 (m²)',    1e-6],
+};
+
+// ========== 状态 ==========
+// 矩形类别独立状态
+let Sr = {
+    flow: 1,            // ml/s（Qᵣ，矩形类别基准）
+    area: 1,            // 矩形面积 mm²
+    areaFlow: 1,        // Qᵣ / Aᵣ
+    pf: 0,              // Qᵣ / P
+    apf: 0,             // (Qᵣ/Aᵣ) / P
+    rectLen: 1, rectWid: 1, rectArea: 1,
+    rectLenUnit: 'mm', rectWidUnit: 'mm',
+    pf_kpa: 100,
+    apf_kpa: 100,
+};
+// 圆形类别独立状态
+let Sc = {
+    flow: 1,            // ml/s（Q꜀，圆形类别基准）
+    diameter: 1,        // mm（圆直径，基准值）
+    area: Math.PI * 0.5 ** 2,   // 由直径算出
+    areaFlow: 1 / (Math.PI * 0.5 ** 2),
+    pf: 0,
+    apf: 0,
+    pf_kpa: 100,
+    apf_kpa: 100,
+};
+// 全局压强（基础量，和流量无关）
+let S = {
+    pressure: 100000,
+};
+
+// ========== 初始化级联 ==========
+function initCascade() {
+    // 矩形
+    Sr.areaFlow = Sr.area ? Sr.flow / Sr.area : 0;
+    Sr.pf  = Sr.pf_kpa  ? Sr.flow / Sr.pf_kpa : 0;
+    Sr.apf = Sr.apf_kpa ? Sr.areaFlow / Sr.apf_kpa : 0;
+    // 圆形：由直径算面积
+    Sc.area = Math.PI * (Sc.diameter / 2) ** 2;
+    Sc.areaFlow = Sc.area ? Sc.flow / Sc.area : 0;
+    Sc.pf  = Sc.pf_kpa  ? Sc.flow / Sc.pf_kpa : 0;
+    Sc.apf = Sc.apf_kpa ? Sc.areaFlow / Sc.apf_kpa : 0;
+}
+initCascade();
+
+// ========== 渲染 ==========
+function makeRows(id, cfg) {
+    const el = document.getElementById(id); if (!el) return;
+    let h = '';
+    for (const [k, [lab, coeff]] of Object.entries(cfg)) {
+        h += `<div class="row" data-cat="${id}" data-key="${k}" data-coeff="${coeff}">
+            <label>${lab}</label>
+            <div class="inp-bar"><input type="number" step="any"><button onclick="conv(this)">转换</button></div>
+        </div>`;
+    }
+    el.innerHTML = h;
+}
+
+// ========== 换算（核心） ==========
+function conv(btn) {
+    const row = btn.closest('.row');
+    const cat = row.dataset.cat, key = row.dataset.key;
+    const inp = row.querySelector('input'), v = parseFloat(inp.value);
+    if (isNaN(v)) { alert('请输入有效数值'); return; }
+
+    // ===== 全局基础量 =====
+    if (cat === 'c_pressure') {
+        S.pressure = v / pressure.units[key][1];
+    }
+
+    // ===== 直径（圆形类别） =====
+    else if (cat === 'c_diameter') {
+        Sc.diameter = v / length.units[key][1];
+    }
+
+    // ===== 矩形流量 Qᵣ =====
+    else if (cat === 'c_rectFlow') {
+        Sr.flow = v / flow.units[key][1];
+    }
+    // ===== 圆形流量 Q꜀ =====
+    else if (cat === 'c_circFlow') {
+        Sc.flow = v / flow.units[key][1];
+    }
+
+    // ===== 矩形面积四单位互转 =====
+    else if (cat === 'c_rectArea') {
+        Sr.rectArea = v / areaUnits[key][1];
+        Sr.area = Sr.rectArea;
+        Sr.rectLen = undefined;
+        Sr.rectWid = undefined;
+    }
+
+    // ===== 圆面积四单位互转 =====
+    else if (cat === 'c_area') {
+        Sc.area = v / areaUnits[key][1];
+        Sc.diameter = 2 * Math.sqrt(Sc.area / Math.PI);
+    }
+
+    /* ===== 矩形派生 ===== */
+
+    // 矩形单位面积流量：Aᵣ 锁死，改 Qᵣ
+    // Qᵣ/Aᵣ = v → Qᵣ = v * Aᵣ
+    else if (cat === 'c_rectAreaFlow') {
+        Sr.areaFlow = v / areaFlowUnits[key][1];
+        Sr.flow = Sr.areaFlow * Sr.area;   // 反推矩形流量
+    }
+
+    // 矩形单位压强流量：kPa 锁死，改 Qᵣ
+    // Qᵣ/P = v → Qᵣ = v * P_kPa
+    else if (cat === 'c_rectPf') {
+        Sr.pf = v / pfUnits[key][1];
+        Sr.flow = Sr.pf * Sr.pf_kpa;       // 反推矩形流量
+    }
+
+    // ★ 矩形单位面积 & 压强流量（修复）
+    // 公式：(Qᵣ/Aᵣ) / P = v
+    // Aᵣ 和 P_kPa 都锁死不变，改的是 Qᵣ
+    // 推导：Qᵣ/Aᵣ = v * P_kPa → Qᵣ = v * P_kPa * Aᵣ
+    else if (cat === 'c_rectApf') {
+        Sr.apf = v / apfUnits[key][1];                    // 单位换算
+        const Q_over_A = Sr.apf * Sr.apf_kpa;             // Qᵣ/Aᵣ = v * P_kPa
+        Sr.areaFlow = Q_over_A;                            // 同步 areaFlow
+        Sr.flow = Q_over_A * Sr.area;                     // Qᵣ = (Qᵣ/Aᵣ) * Aᵣ
+        // 长/宽无法反推
+        Sr.rectLen = undefined;
+        Sr.rectWid = undefined;
+    }
+
+    /* ===== 圆形派生 ===== */
+
+    // 圆形单位面积流量：A 锁死，改 Q꜀
+    // Q꜀/A = v → Q꜀ = v * A
+    else if (cat === 'c_areaFlow') {
+        Sc.areaFlow = v / areaFlowUnits[key][1];
+        Sc.flow = Sc.areaFlow * Sc.area;    // 反推圆形流量
+    }
+
+    // 圆形单位压强流量：kPa 锁死，改 Q꜀
+    // Q꜀/P = v → Q꜀ = v * P_kPa
+    else if (cat === 'c_pf') {
+        Sc.pf = v / pfUnits[key][1];
+        Sc.flow = Sc.pf * Sc.pf_kpa;       // 反推圆形流量
+    }
+
+    // 圆形单位面积 & 压强流量
+    // (Q꜀/A)/P = v → Q꜀/A = v*P → Q꜀ = v*P*A
+    else if (cat === 'c_apf') {
+        Sc.apf = v / apfUnits[key][1];
+        const Q_over_A = Sc.apf * Sc.apf_kpa;
+        Sc.areaFlow = Q_over_A;
+        Sc.flow = Q_over_A * Sc.area;
+    }
+
+    cascade();
+    updateAll();
+}
+
+// ===== 矩形【计算】=====
+function rectCalc() {
+    const el = document.getElementById('card_rect');
+    const lVal = parseFloat(el.querySelector('#rect_len').value);
+    const wVal = parseFloat(el.querySelector('#rect_wid').value);
+    if (isNaN(lVal) || isNaN(wVal)) { alert('请输入长与宽'); return; }
+    const lUnit = el.querySelector('#rect_len_unit').value;
+    const wUnit = el.querySelector('#rect_wid_unit').value;
+    const lMM = lVal / length.units[lUnit][1];
+    const wMM = wVal / length.units[wUnit][1];
+    Sr.rectLen = lMM; Sr.rectWid = wMM;
+    Sr.rectLenUnit = lUnit; Sr.rectWidUnit = wUnit;
+    Sr.rectArea = lMM * wMM;
+    Sr.area = Sr.rectArea;
+    cascade(); updateAll();
+}
+
+// ===== kPa 确定按钮（矩形） =====
+function rectPfKpaRead() {
+    const v = parseFloat(document.getElementById('rect_pf_kpa_input').value);
+    if (isNaN(v)) return; Sr.pf_kpa = v;
+    Sr.pf = Sr.pf_kpa ? Sr.flow / Sr.pf_kpa : 0;
+    cascade(); updateAll();
+}
+function rectApfKpaRead() {
+    const v = parseFloat(document.getElementById('rect_apf_kpa_input').value);
+    if (isNaN(v)) return; Sr.apf_kpa = v;
+    Sr.apf = Sr.apf_kpa ? Sr.areaFlow / Sr.apf_kpa : 0;
+    cascade(); updateAll();
+}
+
+// ===== kPa 确定按钮（圆形） =====
+function pfKpaRead() {
+    const v = parseFloat(document.getElementById('pf_kpa_input').value);
+    if (isNaN(v)) return; Sc.pf_kpa = v;
+    Sc.pf = Sc.pf_kpa ? Sc.flow / Sc.pf_kpa : 0;
+    cascade(); updateAll();
+}
+function apfKpaRead() {
+    const v = parseFloat(document.getElementById('apf_kpa_input').value);
+    if (isNaN(v)) return; Sc.apf_kpa = v;
+    Sc.apf = Sc.apf_kpa ? Sc.areaFlow / Sc.apf_kpa : 0;
+    cascade(); updateAll();
+}
+
+// ========== 级联 ==========
+function cascade() {
+    // 矩形：从 Qᵣ 往下推
+    Sr.areaFlow = (Sr.area && Sr.area > 0) ? Sr.flow / Sr.area : 0;
+    Sr.pf  = Sr.pf_kpa  ? Sr.flow / Sr.pf_kpa : 0;
+    Sr.apf = (Sr.apf_kpa && Sr.areaFlow) ? Sr.areaFlow / Sr.apf_kpa : 0;
+
+    // 圆形：由直径算面积再往下推
+    Sc.area = Math.PI * (Sc.diameter / 2) ** 2;
+    Sc.areaFlow = Sc.area ? Sc.flow / Sc.area : 0;
+    Sc.pf  = Sc.pf_kpa  ? Sc.flow / Sc.pf_kpa : 0;
+    Sc.apf = Sc.apf_kpa ? Sc.areaFlow / Sc.apf_kpa : 0;
+}
+
+function fmt(n) {
+    if (n === 0) return '0';
+    if (n === undefined || !isFinite(n)) return 'unknown';
+    const s = n.toFixed(8);
+    return s.includes('.') ? s.replace(/(\.\d*?)0+$/, '$1').replace(/\.$/, '') : s;
+}
+
+function updateAll() {
+    // 全局基础量：压强
+    document.querySelectorAll('#c_pressure .row').forEach(r => {
+        r.querySelector('input').value = fmt(S.pressure * parseFloat(r.dataset.coeff));
+    });
+
+    // 直径
+    document.querySelectorAll('#c_diameter .row').forEach(r => {
+        r.querySelector('input').value = fmt(Sc.diameter * parseFloat(r.dataset.coeff));
+    });
+
+    // 矩形流量 Qᵣ
+    document.querySelectorAll('#c_rectFlow .row').forEach(r => {
+        r.querySelector('input').value = fmt(Sr.flow * parseFloat(r.dataset.coeff));
+    });
+    // 圆形流量 Q꜀
+    document.querySelectorAll('#c_circFlow .row').forEach(r => {
+        r.querySelector('input').value = fmt(Sc.flow * parseFloat(r.dataset.coeff));
+    });
+
+    // 矩形派生
+    const rectMaps = [
+        ['c_rectArea', areaUnits, Sr.area],
+        ['c_rectAreaFlow', areaFlowUnits, Sr.areaFlow],
+        ['c_rectPf', pfUnits, Sr.pf],
+        ['c_rectApf', apfUnits, Sr.apf],
+    ];
+    for (const [id, units, base] of rectMaps) {
+        document.querySelectorAll(`#${id} .row`).forEach(r => {
+            r.querySelector('input').value = fmt(base * parseFloat(r.dataset.coeff));
+        });
+    }
+
+    // 圆形派生
+    const circMaps = [
+        ['c_area', areaUnits, Sc.area],
+        ['c_areaFlow', areaFlowUnits, Sc.areaFlow],
+        ['c_pf', pfUnits, Sc.pf],
+        ['c_apf', apfUnits, Sc.apf],
+    ];
+    for (const [id, units, base] of circMaps) {
+        document.querySelectorAll(`#${id} .row`).forEach(r => {
+            r.querySelector('input').value = fmt(base * parseFloat(r.dataset.coeff));
+        });
+    }
+
+    // 矩形长/宽回写
+    const lenIn = document.getElementById('rect_len');
+    const widIn = document.getElementById('rect_wid');
+    const lenSel = document.getElementById('rect_len_unit');
+    const widSel = document.getElementById('rect_wid_unit');
+    if (lenIn && lenSel) {
+        lenSel.value = Sr.rectLenUnit || 'mm';
+        lenIn.value = (Sr.rectLen !== undefined) ? fmt(Sr.rectLen * length.units[lenSel.value][1]) : 'unknown';
+    }
+    if (widIn && widSel) {
+        widSel.value = Sr.rectWidUnit || 'mm';
+        widIn.value = (Sr.rectWid !== undefined) ? fmt(Sr.rectWid * length.units[widSel.value][1]) : 'unknown';
+    }
+
+    // kPa 输入框回写
+    const kpas = [
+        ['rect_pf_kpa_input', Sr.pf_kpa],
+        ['rect_apf_kpa_input', Sr.apf_kpa],
+        ['pf_kpa_input', Sc.pf_kpa],
+        ['apf_kpa_input', Sc.apf_kpa],
+    ];
+    for (const [id, v] of kpas) { const el = document.getElementById(id); if(el) el.value = v; }
+}
+
+// ========== 初始化渲染 ==========
+makeRows('c_pressure', pressure.units);
+makeRows('c_diameter', length.units);
+makeRows('c_rectFlow', flow.units);
+makeRows('c_circFlow', flow.units);
+makeRows('c_rectArea', areaUnits);
+makeRows('c_rectAreaFlow', areaFlowUnits);
+makeRows('c_rectPf',       pfUnits);
+makeRows('c_rectApf',      apfUnits);
+makeRows('c_area',     areaUnits);
+makeRows('c_areaFlow', areaFlowUnits);
+makeRows('c_pf',       pfUnits);
+makeRows('c_apf',      apfUnits);
+updateAll();
+</script>
+</body>
+</html>
